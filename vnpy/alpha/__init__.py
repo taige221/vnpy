@@ -3,6 +3,12 @@ from .dataset import AlphaDataset, Segment, to_datetime, register_functions
 from .model import AlphaModel
 from .strategy import AlphaStrategy, BacktestingEngine
 from .lab import AlphaLab
+from .signal import (
+    import_external_signal,
+    load_external_signal,
+    normalize_external_signal,
+    to_vt_symbol,
+)
 
 
 __all__ = [
@@ -14,5 +20,9 @@ __all__ = [
     "AlphaModel",
     "AlphaStrategy",
     "BacktestingEngine",
-    "AlphaLab"
+    "AlphaLab",
+    "import_external_signal",
+    "load_external_signal",
+    "normalize_external_signal",
+    "to_vt_symbol",
 ]
