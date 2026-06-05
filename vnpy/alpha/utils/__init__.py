@@ -5,12 +5,59 @@ from .signal import (
     to_vt_symbol,
 )
 from .a_share import build_eligibility_from_source_frame
+from .a_share_factor_research import (
+    AShareCandidateComboResult,
+    AShareFirstPassScanResult,
+    ASharePanelAlphaSmokeConfig,
+    ASharePanelAlphaSmokeResult,
+    ASharePanelScanConfig,
+    AShareStatAlphaLoopConfig,
+    AShareStatAlphaLoopResult,
+    COMPONENT_COLUMNS,
+    parse_int_tuple,
+    parse_period,
+    run_a_share_stat_alpha_loop,
+    run_candidate_factor_combo_scan,
+    run_first_pass_panel_factor_scan,
+    run_panel_alpha_smoke,
+)
+from .a_share_portfolio import (
+    ASharePortfolioBacktestGridResult,
+    ASharePortfolioConfig,
+    ASharePortfolioExposureResult,
+    DEFAULT_A_SHARE_SEGMENTS,
+    run_combo_price_flow3_backtest,
+    run_combo_price_flow3_backtest_grid,
+    run_combo_price_flow3_exposure_diagnostics,
+    summarize_backtest,
+)
 from .stat_alpha_loop import (
     DEFAULT_HORIZONS,
     StatAlphaLoop,
-    classic_price_expressions,
     dedupe_expressions,
     forward_return_expr,
+)
+from .doubleBottom_extract import (
+    DoubleBottomExtractConfig,
+    extract_double_bottom_factor_frame,
+    extract_double_bottom_factors,
+    load_double_bottom_bars,
+)
+from .doubleBottom_example import (
+    DoubleBottomExampleConfig,
+    load_double_bottom_example_bars,
+    run_double_bottom_example,
+)
+from .strategyByBox_extract import (
+    StrategyByBoxExtractConfig,
+    extract_strategy_by_box_factor_frame,
+    extract_strategy_by_box_factors,
+    load_strategy_by_box_bars,
+)
+from .strategyByBox_example import (
+    StrategyByBoxExampleConfig,
+    load_strategy_by_box_example_bars,
+    run_strategy_by_box_example,
 )
 
 
@@ -20,9 +67,44 @@ __all__ = [
     "normalize_external_signal",
     "to_vt_symbol",
     "build_eligibility_from_source_frame",
+    "AShareCandidateComboResult",
+    "AShareFirstPassScanResult",
+    "ASharePanelAlphaSmokeConfig",
+    "ASharePanelAlphaSmokeResult",
+    "ASharePanelScanConfig",
+    "AShareStatAlphaLoopConfig",
+    "AShareStatAlphaLoopResult",
+    "COMPONENT_COLUMNS",
+    "parse_int_tuple",
+    "parse_period",
+    "run_a_share_stat_alpha_loop",
+    "run_candidate_factor_combo_scan",
+    "run_first_pass_panel_factor_scan",
+    "run_panel_alpha_smoke",
+    "ASharePortfolioBacktestGridResult",
+    "ASharePortfolioConfig",
+    "ASharePortfolioExposureResult",
+    "DEFAULT_A_SHARE_SEGMENTS",
+    "run_combo_price_flow3_backtest",
+    "run_combo_price_flow3_backtest_grid",
+    "run_combo_price_flow3_exposure_diagnostics",
+    "summarize_backtest",
     "DEFAULT_HORIZONS",
     "StatAlphaLoop",
-    "classic_price_expressions",
     "dedupe_expressions",
     "forward_return_expr",
+    "DoubleBottomExtractConfig",
+    "extract_double_bottom_factor_frame",
+    "extract_double_bottom_factors",
+    "load_double_bottom_bars",
+    "DoubleBottomExampleConfig",
+    "load_double_bottom_example_bars",
+    "run_double_bottom_example",
+    "StrategyByBoxExtractConfig",
+    "extract_strategy_by_box_factor_frame",
+    "extract_strategy_by_box_factors",
+    "load_strategy_by_box_bars",
+    "StrategyByBoxExampleConfig",
+    "load_strategy_by_box_example_bars",
+    "run_strategy_by_box_example",
 ]

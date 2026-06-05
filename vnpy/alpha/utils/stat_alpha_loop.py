@@ -66,24 +66,6 @@ def dedupe_expressions(exprs: list[str]) -> list[str]:
     return result
 
 
-def classic_price_expressions(windows: tuple[int, ...] = (5, 10, 20, 60, 120)) -> list[str]:
-    """Generate a compact benchmark grid of non-fundamental OHLCV factors."""
-    exprs: list[str] = []
-    for window in windows:
-        exprs.extend(
-            [
-                f"cs_rank(close / ts_delay(close, {window}) - 1)",
-                f"-1 * cs_rank(close / ts_delay(close, {window}) - 1)",
-                f"cs_rank((close - ts_min(low, {window})) / (ts_max(high, {window}) - ts_min(low, {window}) + 1e-12))",
-                f"-1 * cs_rank(ts_std(close / ts_delay(close, 1) - 1, {window}))",
-                f"cs_rank(volume / (ts_mean(volume, {window}) + 1e-12))",
-                f"cs_rank(turnover / (ts_mean(turnover, {window}) + 1e-12))",
-                f"-1 * cs_rank(ts_corr(close, volume, {window}))",
-            ]
-        )
-    return dedupe_expressions(exprs)
-
-
 def _empty_metrics() -> SegmentMetrics:
     """Return empty metrics for a segment with no valid observations."""
     return SegmentMetrics(

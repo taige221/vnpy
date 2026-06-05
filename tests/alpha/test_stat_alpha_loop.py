@@ -4,9 +4,9 @@ from datetime import datetime, timedelta
 
 import polars as pl
 
+from vnpy.alpha.factors import classic_price_expressions
 from vnpy.alpha.utils.stat_alpha_loop import (
     StatAlphaLoop,
-    classic_price_expressions,
     dedupe_expressions,
     forward_return_expr,
 )
