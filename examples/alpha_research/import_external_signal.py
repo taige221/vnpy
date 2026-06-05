@@ -15,7 +15,8 @@ Example:
 from pathlib import Path
 import argparse
 
-from vnpy.alpha import AlphaLab, import_external_signal
+from vnpy.alpha import AlphaLab
+from vnpy.alpha.utils import import_external_signal
 
 
 def parse_args() -> argparse.Namespace:

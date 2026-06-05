@@ -5,7 +5,7 @@ import polars as pl
 
 from vnpy.trader.object import BarData, TradeData
 from vnpy.trader.constant import Direction
-from vnpy.trader.utility import round_to
+from vnpy.trader.utility import floor_to
 
 from vnpy.alpha import AlphaStrategy
 
@@ -71,7 +71,7 @@ class EventSignalStrategy(AlphaStrategy):
             cash += turnover - cost
 
         buy_symbols: list[str] = self.get_buy_symbols(today_signal, pos_symbols, executed_sell_symbols)
-        if buy_symbols:
+        if buy_symbols and cash > 0:
             buy_value: float = cash * self.cash_ratio / len(buy_symbols)
             signal_rows: dict[str, dict[str, Any]] = {
                 cast(str, row["vt_symbol"]): row
@@ -83,8 +83,8 @@ class EventSignalStrategy(AlphaStrategy):
                 if not bar or not bar.close_price:
                     continue
 
-                buy_volume: float = round_to(buy_value / bar.close_price, self.min_volume)
-                if not buy_volume:
+                buy_volume: float = floor_to(buy_value / bar.close_price, self.min_volume)
+                if buy_volume <= 0:
                     continue
 
                 self.set_target(vt_symbol, buy_volume)

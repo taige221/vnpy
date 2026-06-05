@@ -2,7 +2,7 @@ from datetime import datetime
 
 import polars as pl
 
-from vnpy.alpha.signal import load_external_signal, normalize_external_signal, to_vt_symbol
+from vnpy.alpha.utils import load_external_signal, normalize_external_signal, to_vt_symbol
 
 
 def test_to_vt_symbol_converts_common_a_share_formats() -> None:
@@ -64,3 +64,37 @@ def test_load_external_signal_preserves_csv_date_and_symbol_strings(tmp_path) ->
     assert signal["datetime"].to_list() == [datetime(2024, 1, 2)]
     assert signal["vt_symbol"].to_list() == ["000001.SZSE"]
     assert signal["signal"].to_list() == [0.8]
+
+
+def test_normalize_external_signal_parses_integer_yyyymmdd_dates() -> None:
+    """Test in-memory numeric YYYYMMDD dates are parsed as calendar dates."""
+    source = pl.DataFrame(
+        {
+            "trade_date": [20240102],
+            "ts_code": ["000001.SZ"],
+            "signal": [1.0],
+        }
+    )
+
+    signal = normalize_external_signal(source)
+
+    assert signal["datetime"].to_list() == [datetime(2024, 1, 2)]
+    assert signal["vt_symbol"].to_list() == ["000001.SZSE"]
+
+
+def test_load_external_signal_parses_parquet_integer_yyyymmdd_dates(tmp_path) -> None:
+    """Test Parquet numeric YYYYMMDD dates are parsed as calendar dates."""
+    parquet_path = tmp_path.joinpath("signal.parquet")
+    pl.DataFrame(
+        {
+            "trade_date": [20240102],
+            "ts_code": ["000001.SZ"],
+            "signal": [1.0],
+        }
+    ).write_parquet(parquet_path)
+
+    signal = load_external_signal(parquet_path)
+
+    assert signal["datetime"].to_list() == [datetime(2024, 1, 2)]
+    assert signal["vt_symbol"].to_list() == ["000001.SZSE"]
+

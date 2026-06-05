@@ -1,25 +1,21 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-VeighNa is an event-driven quant trading framework. The core lives in `vnpy/`:
-- `vnpy/event/` — the `EventEngine` message bus that drives the whole system.
-- `vnpy/trader/` — platform core. `MainEngine` (`engine.py`) wires together `BaseEngine` subclasses (`OmsEngine`, `LogEngine`, `EmailEngine`, `WechatEngine`) and exposes `add_gateway`/`add_app`/`add_engine`. Shared domain types live in `object.py`/`constant.py`; trading helpers (`ArrayManager`, `BarGenerator`) in `utility.py`; the PySide6 GUI in `ui/`.
-- `vnpy/alpha/` — AI/ML multi-factor research stack (`dataset/`, `model/`, `strategy/`, `lab.py`); needs the `alpha` extra.
-- `vnpy/chart/` (pyqtgraph K-line) and `vnpy/rpc/` (ZeroMQ distributed deployment).
-
-Trading gateways (CTP, IB…) and apps (CTA strategy…) are **separate `vnpy_*` pip packages**, not in this repo — they are loaded at runtime via `add_gateway`/`add_app`. `examples/` holds runnable setups; `tests/` holds pytest suites.
+VeighNa is an event-driven quant trading framework. Core code lives in `vnpy/`: `vnpy/event/` provides the `EventEngine` message bus, while `vnpy/trader/` contains `MainEngine`, OMS/log/email/wechat engines, shared domain objects, utilities, settings, and the PySide6 UI. `vnpy/alpha/` is the AI/ML research stack, with dataset expressions, processors, models, strategies, and `lab.py` workflow management; install the `alpha` extra before using it. `vnpy/chart/` contains pyqtgraph K-line components, and `vnpy/rpc/` provides ZeroMQ RPC support. Runnable examples live in `examples/`, tests in `tests/`, and documentation in `docs/`. Gateways and trading apps are separate `vnpy_*` packages loaded at runtime through `add_gateway` and `add_app`.
 
 ## Build, Test, and Development Commands
-- `bash install.sh` (Linux) / `bash install_osx.sh` (macOS) / `install.bat` (Windows) — full setup including ta-lib.
-- `uv pip install -e .[alpha,dev]` — editable dev install. ta-lib needs `--index=https://pypi.vnpy.com`.
-- `ruff check .` — lint. `mypy vnpy` — type check. `uv build` — build wheel/sdist.
-- `pytest tests/` — run tests; a single test is e.g. `pytest tests/test_alpha101.py::test_<name>`.
+- `bash install.sh`, `bash install_osx.sh`, or `install.bat` — platform setup scripts, including TA-Lib installation.
+- `uv pip install -e .[alpha,dev] --index=https://pypi.vnpy.com` — editable install with alpha and development dependencies.
+- `ruff check .` — run configured lint checks.
+- `mypy vnpy` — run strict type checking for the package.
+- `pytest tests/` — run the local test suite; a single test can be run as `pytest tests/test_alpha101.py::test_alpha1`.
+- `uv build` — build wheel and source distribution.
 
 ## Coding Style & Naming Conventions
-Four-space indent, fully typed code (the package ships `py.typed`). Ruff targets py310 with rule sets B/E/F/UP/W (line length `E501` ignored). mypy runs strict (`disallow_untyped_defs`, `disallow_incomplete_defs`, `no_implicit_optional`, …) — annotate every function. Wrap user-facing strings in `_()` from `vnpy.trader.locale`; the English catalog builds from `vnpy/trader/locale/vnpy.pot`.
+Use four-space indentation and fully typed Python. The package ships `py.typed`; mypy is configured with strict options including `disallow_untyped_defs`, `disallow_incomplete_defs`, and `no_implicit_optional`. Ruff targets Python 3.10 and enables B/E/F/UP/W rules, with `E501` ignored. Wrap trader-facing strings with `_()` from `vnpy.trader.locale`; locale source files live under `vnpy/trader/locale/`.
 
 ## Testing Guidelines
-Tests use `pytest` and live under `tests/`. Note that CI (`.github/workflows/pythonapp.yml`, Windows + Python 3.13) runs only `ruff`, `mypy`, and `uv build` — it does not run the suite, so run `pytest` locally before submitting.
+Tests use `pytest` and are named under `tests/`, with alpha-specific tests in `tests/alpha/`. CI (`.github/workflows/pythonapp.yml`) runs on Windows with Python 3.13 and executes `ruff check .`, `mypy vnpy`, and `uv build`; it does not run `pytest`, so run relevant tests locally before submitting behavior changes.
 
 ## Commit & Pull Request Guidelines
-Commit subjects use bracketed tags: `[Add]`, `[Mod]`, `[Fix]`, `[Del]` followed by a short description (English or Chinese). Keep PRs small and focused — split large changes (per `PULL_REQUEST_TEMPLATE.md`), list improvements, and reference issues with `Close #<id>`. Target the `master` or `dev` branch.
+Recent commits mostly use bracketed tags such as `[Add]`, `[Mod]`, `[Fix]`, and `[Del]`, with some conventional-style subjects like `feat:`, `fix:`, and `chore(ci):`; follow nearby history for the change type. Keep PRs small and focused, as requested by `.github/PULL_REQUEST_TEMPLATE.md`. List improvements, link related issues with `Close #`, and target the `dev` branch per the README contribution flow.

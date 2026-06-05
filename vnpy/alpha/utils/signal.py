@@ -5,7 +5,7 @@ import polars as pl
 
 
 if TYPE_CHECKING:
-    from .lab import AlphaLab
+    from ..lab import AlphaLab
 
 
 DATETIME_COLUMNS: tuple[str, ...] = ("datetime", "date", "trade_date")
@@ -86,6 +86,18 @@ def _datetime_expr(column: str, dtype: pl.DataType) -> pl.Expr:
         return pl.coalesce(
             expr.str.strptime(pl.Date, format="%Y%m%d", strict=False).cast(pl.Datetime),
             generic_expr.str.to_datetime(strict=False),
+        ).alias("datetime")
+
+    if dtype.is_integer():
+        text_expr: pl.Expr = expr.cast(pl.Utf8)
+        yyyymmdd_expr: pl.Expr = (
+            pl.when(text_expr.str.contains(r"^\d{8}$"))
+            .then(text_expr)
+            .otherwise(pl.lit(None, dtype=pl.Utf8))
+        )
+        return pl.coalesce(
+            yyyymmdd_expr.str.strptime(pl.Date, format="%Y%m%d", strict=False).cast(pl.Datetime),
+            expr.cast(pl.Datetime, strict=False),
         ).alias("datetime")
 
     return expr.cast(pl.Datetime, strict=False).alias("datetime")

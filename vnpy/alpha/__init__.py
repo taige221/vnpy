@@ -3,7 +3,12 @@ from .dataset import AlphaDataset, Segment, to_datetime, register_functions
 from .model import AlphaModel
 from .strategy import AlphaStrategy, BacktestingEngine
 from .lab import AlphaLab
-from .signal import (
+from .utils import (
+    DEFAULT_HORIZONS,
+    StatAlphaLoop,
+    classic_price_expressions,
+    dedupe_expressions,
+    forward_return_expr,
     import_external_signal,
     load_external_signal,
     normalize_external_signal,
@@ -21,6 +26,11 @@ __all__ = [
     "AlphaStrategy",
     "BacktestingEngine",
     "AlphaLab",
+    "DEFAULT_HORIZONS",
+    "StatAlphaLoop",
+    "classic_price_expressions",
+    "dedupe_expressions",
+    "forward_return_expr",
     "import_external_signal",
     "load_external_signal",
     "normalize_external_signal",

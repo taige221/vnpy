@@ -11,8 +11,9 @@ from vnpy.trader.object import BarData
 class FakeEngine:
     """Small strategy engine double for EventSignalStrategy tests."""
 
-    def __init__(self, signal: pl.DataFrame) -> None:
+    def __init__(self, signal: pl.DataFrame, cash: float = 100_000) -> None:
         self.signal: pl.DataFrame = signal
+        self.cash: float = cash
         self.orders: list[tuple[str, Direction, Offset, float, float]] = []
 
     def get_signal(self) -> pl.DataFrame:
@@ -37,7 +38,7 @@ class FakeEngine:
 
     def get_cash_available(self) -> float:
         """Return test cash."""
-        return 100_000
+        return self.cash
 
     def get_holding_value(self) -> float:
         """Return test holding value."""
@@ -170,4 +171,23 @@ def test_event_signal_strategy_does_not_buy_when_sell_has_no_bar() -> None:
         }
     )
 
+    assert engine.orders == []
+
+
+def test_event_signal_strategy_does_not_short_when_cash_is_negative() -> None:
+    """Test negative cash cannot create a short target from a buy signal."""
+    signal = pl.DataFrame(
+        {
+            "datetime": [datetime(2024, 1, 2)],
+            "vt_symbol": ["000100.SZSE"],
+            "signal": [0.9],
+        }
+    )
+    engine = FakeEngine(signal, cash=-1_000)
+    strategy = EventSignalStrategy(engine, "event", [], {"top_k": 1, "price_add": 0})
+    strategy.on_init()
+
+    strategy.on_bars({"000100.SZSE": make_bar("000100", Exchange.SZSE, 4.34)})
+
+    assert strategy.get_target("000100.SZSE") == 0
     assert engine.orders == []
