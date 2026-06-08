@@ -228,6 +228,7 @@ def calculate_by_expression(df: pl.DataFrame, expression: str) -> pl.DataFrame:
     from .ta_function import (              # noqa
         ta_rsi,
         ta_atr,
+        ta_ema,
         ta_macd_dif,
         ta_macd_dea,
         ta_macd_hist,

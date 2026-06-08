@@ -1,12 +1,32 @@
 """Time Series Operators"""
 
-from typing import cast
-
-from scipy import stats
 import polars as pl
-import numpy as np
 
 from .utility import DataProxy
+
+
+def _rolling_extreme_position(feature: DataProxy, window: int, *, is_max: bool) -> DataProxy:
+    """Return 1-based position of the rolling max/min from oldest to newest."""
+    extreme_expr: pl.Expr
+    if is_max:
+        extreme_expr = pl.col("data").rolling_max(window).over("vt_symbol")
+    else:
+        extreme_expr = pl.col("data").rolling_min(window).over("vt_symbol")
+
+    source: pl.DataFrame = feature.df.with_columns(extreme_expr.alias("_rolling_extreme"))
+    position_exprs: list[pl.Expr] = [
+        pl.when(pl.col("data").shift(offset).over("vt_symbol") == pl.col("_rolling_extreme"))
+        .then(pl.lit(window - offset))
+        .otherwise(None)
+        for offset in range(window - 1, -1, -1)
+    ]
+
+    df: pl.DataFrame = source.select(
+        pl.col("datetime"),
+        pl.col("vt_symbol"),
+        pl.coalesce(position_exprs).alias("data"),
+    )
+    return DataProxy(df)
 
 
 def ts_delay(feature: DataProxy, window: int) -> DataProxy:
@@ -41,30 +61,38 @@ def ts_max(feature: DataProxy, window: int) -> DataProxy:
 
 def ts_argmax(feature: DataProxy, window: int) -> DataProxy:
     """Return the index of the maximum value over a rolling window"""
-    df: pl.DataFrame = feature.df.select(
-        pl.col("datetime"),
-        pl.col("vt_symbol"),
-        pl.col("data").rolling_map(lambda s: cast(int, s.arg_max()) + 1, window).over("vt_symbol")
-    )
-    return DataProxy(df)
+    return _rolling_extreme_position(feature, window, is_max=True)
 
 
 def ts_argmin(feature: DataProxy, window: int) -> DataProxy:
     """Return the index of the minimum value over a rolling window"""
-    df: pl.DataFrame = feature.df.select(
-        pl.col("datetime"),
-        pl.col("vt_symbol"),
-        pl.col("data").rolling_map(lambda s: cast(int, s.arg_min()) + 1, window).over("vt_symbol")
-    )
-    return DataProxy(df)
+    return _rolling_extreme_position(feature, window, is_max=False)
 
 
 def ts_rank(feature: DataProxy, window: int) -> DataProxy:
     """Calculate the percentile rank of the current value within the window"""
+    current: pl.Expr = pl.col("data")
+    shifted_values: list[pl.Expr] = [
+        pl.col("data").shift(offset).over("vt_symbol")
+        for offset in range(window - 1, -1, -1)
+    ]
+    valid_count: pl.Expr = pl.sum_horizontal(
+        [value.is_not_null().cast(pl.Int64) for value in shifted_values]
+    )
+    less_count: pl.Expr = pl.sum_horizontal(
+        [(value < current).cast(pl.Int64).fill_null(0) for value in shifted_values]
+    )
+    equal_count: pl.Expr = pl.sum_horizontal(
+        [(value == current).cast(pl.Int64).fill_null(0) for value in shifted_values]
+    )
+
     df: pl.DataFrame = feature.df.select(
         pl.col("datetime"),
         pl.col("vt_symbol"),
-        pl.col("data").rolling_map(lambda s: stats.percentileofscore(s, s[-1]) / 100, window).over("vt_symbol")
+        pl.when(valid_count == window)
+        .then((less_count + ((equal_count + 1.0) / 2.0)) / float(window))
+        .otherwise(None)
+        .alias("data"),
     )
     return DataProxy(df)
 
@@ -84,7 +112,7 @@ def ts_mean(feature: DataProxy, window: int) -> DataProxy:
     df: pl.DataFrame = feature.df.select(
         pl.col("datetime"),
         pl.col("vt_symbol"),
-        pl.col("data").rolling_map(lambda s: np.nanmean(s), window, min_samples=1).over("vt_symbol")
+        pl.col("data").rolling_mean(window, min_samples=1).over("vt_symbol")
     )
     return DataProxy(df)
 
@@ -94,7 +122,7 @@ def ts_std(feature: DataProxy, window: int) -> DataProxy:
     df: pl.DataFrame = feature.df.select(
         pl.col("datetime"),
         pl.col("vt_symbol"),
-        pl.col("data").rolling_map(lambda s: np.nanstd(s, ddof=0), window, min_samples=1).over("vt_symbol")
+        pl.col("data").rolling_std(window, min_samples=1, ddof=0).over("vt_symbol")
     )
     return DataProxy(df)
 

@@ -124,6 +124,14 @@ def ta_atr(high: DataProxy, low: DataProxy, close: DataProxy, window: int) -> Da
     )
 
 
+def ta_ema(close: DataProxy, window: int) -> DataProxy:
+    """Calculate EMA indicator by contract."""
+    return _apply_unary_by_symbol(
+        close,
+        lambda series: talib.EMA(series.to_numpy(dtype="float64"), timeperiod=window),
+    )
+
+
 def ta_macd_dif(close: DataProxy, fast_period: int = 12, slow_period: int = 26, signal_period: int = 9) -> DataProxy:
     """Calculate MACD DIF line by contract."""
     return _macd_component(close, fast_period, slow_period, signal_period, "dif")
