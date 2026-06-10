@@ -1,0 +1,97 @@
+{
+  "name": "l1_execution_v1",
+  "status": "frozen_research_v1",
+  "frozen_date": "2026-06-10",
+  "scope": "A-share TradingView A5/TrendRSI L1 next-open execution research",
+  "source_snapshot": "scripts/alpha_research/tradingview/data/live_signal_snapshot.parquet",
+  "live_signal_snapshot": "scripts/alpha_research/tradingview/data/live_signal_snapshot.parquet",
+  "research_snapshot": "examples/alpha_research/tradingview/reports/a5_signal_snapshot/a5_signal_snapshot.parquet",
+  "signal": {
+    "buy_point_type": "L1_reversal_start",
+    "signal_role": "buy_point_trigger",
+    "notes": "L2 and L3 are excluded from v1 and must be evaluated separately."
+  },
+  "candidate_day_filter": {
+    "field": "core4_mean",
+    "operator": ">=",
+    "value": 0.52,
+    "role": "candidate_pool",
+    "notes": "This is the v1 candidate threshold. It is intentionally wider than the strongest 0.54 bucket."
+  },
+  "day_quality_labels": [
+    {
+      "label": "strong_candidate",
+      "condition": "core4_mean >= 0.54"
+    },
+    {
+      "label": "candidate",
+      "condition": "0.52 <= core4_mean < 0.54"
+    },
+    {
+      "label": "filtered_out",
+      "condition": "core4_mean < 0.52"
+    }
+  ],
+  "entry_execution": {
+    "entry_timing": "next_open",
+    "main_gap_field": "future_entry_gap_pct",
+    "main_gap_min_inclusive": -0.03,
+    "main_gap_max_exclusive": 0.01,
+    "watch_gap_min_inclusive": 0.01,
+    "watch_gap_max_exclusive": 0.03,
+    "reject_gap_min_inclusive": 0.05,
+    "exclude_one_word_limit_up": true
+  },
+  "tradability_filters": {
+    "require_next_valid_bar": true,
+    "exclude_next_limit_down": true,
+    "exclude_next_limit_up": true,
+    "exclude_bse": true,
+    "min_circ_mv": 200000,
+    "min_turnover_rate": 0.5,
+    "circ_mv_unit_note": "Snapshot circ_mv is in the local panel unit; 200000 is approximately 20e8 CNY in prior tests.",
+    "turnover_rate_unit_note": "turnover_rate is percent, so 0.5 means 0.5%."
+  },
+  "portfolio_controls": {
+    "ranking_default": "core4_short70_30",
+    "ranking_column": "rank_score_core4_short70_30",
+    "ranking_role": "signal_close_rank",
+    "signal_close_rank_pool_size": 20,
+    "next_open_execution_top_k": 2,
+    "overnight_pool_size": 20,
+    "execution_top_k": 2,
+    "selection_test_default": "next_open_select_top2_from_signal_close_top20",
+    "top_k_tested": [
+      1,
+      2,
+      5,
+      10,
+      20,
+      50
+    ],
+    "industry_cap_default": 0.3,
+    "industry_cap_alternative": 0.4,
+    "notes": "Freeze v1 uses core4_short70_30 as the signal-close rank, keeps signal_close_top20 after the signal-date close, then selects executable top1/top2 from that pool after the next open."
+  },
+  "exit_policy": {
+    "frozen_validation_exit": "fixed_3d_path",
+    "risk_control_candidate": "tp5_confirm3_wide_profit_5d_path",
+    "live_exit_status": "not_frozen",
+    "notes": "fixed_3d_path is the v1 validation baseline. A real live take-profit/stop-loss exit needs a separate v2 freeze."
+  },
+  "primary_evidence": {
+    "random_topk_summary": "examples/alpha_research/tradingview/reports/a5_signal_snapshot/l1_execution_random_topk_summary.csv",
+    "slippage_stress": "examples/alpha_research/tradingview/reports/a5_signal_snapshot/l1_execution_slippage_stress_summary.csv",
+    "liquidity_stress": "examples/alpha_research/tradingview/reports/a5_signal_snapshot/l1_execution_liquidity_stress_summary.csv",
+    "industry_cap_stress": "examples/alpha_research/tradingview/reports/a5_signal_snapshot/l1_execution_industry_cap_summary.csv",
+    "overnight_rank_summary": "examples/alpha_research/tradingview/reports/a5_signal_snapshot/l1_overnight_rank_execution_summary.csv",
+    "overnight_rank_topk_10_20_50": "examples/alpha_research/tradingview/reports/a5_signal_snapshot/l1_overnight_rank_topk_10_20_50/l1_overnight_rank_execution_summary.csv",
+    "walk_forward": "examples/alpha_research/tradingview/reports/a5_signal_snapshot/l1_day_filter_path_exit_walk_forward_summary.csv"
+  },
+  "known_limits": [
+    "This is not a broker-level fill simulation.",
+    "Ranking is frozen for v1 as core4_short70_30, but it is still a research rank and not a production portfolio allocator.",
+    "future_* fields are offline labels only and must not be used in live ranking.",
+    "The v1 freeze covers L1 candidate and execution research, not L2/L3 or a production exit engine."
+  ]
+}
