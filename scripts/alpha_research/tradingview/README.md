@@ -14,10 +14,43 @@ workflows whose source data and generated reports live under the ignored
 - `configs/`: frozen execution/version configs shared by live and research
   entrypoints.
 - `data/` and `reports/`: generated local artifacts, ignored by Git.
+- `signal_core/`: shared signal semantics such as buy-point type, label, and
+  subtype definitions.
 
 ## L1 Execution V1 Daily Candidates
 
-Build or refresh the live-safe snapshot first:
+Refresh the target-date live-safe L1 rows from local daily data first:
+
+```bash
+rtk python3 scripts/alpha_research/tradingview/live/refresh_l1_live_today.py --target-date 2026-06-09
+```
+
+This operational entrypoint reads recent local daily bars and
+`research_panel_daily`, computes only the target-date `L1_reversal_start` rows,
+and replaces that date's L1 rows in
+`scripts/alpha_research/tradingview/data/live_signal_snapshot.parquet`. It does
+not read the canonical research snapshot and does not generate `future_*`,
+`next_*`, or `risk_*` fields.
+
+To inspect the target-date context without writing:
+
+```bash
+rtk python3 scripts/alpha_research/tradingview/live/refresh_l1_live_today.py --target-date 2026-06-09 --dry-run
+```
+
+The full rebuild entrypoint below is retained for historical parity checks. It
+rebuilds the upstream TrendRSI v4 start-grade events, v5 playbook events, and
+A5 L1/L2/L3 snapshot under the ignored
+`scripts/alpha_research/tradingview/data/live_refresh_work/` directory before
+publishing a live-safe snapshot:
+
+```bash
+rtk python3 scripts/alpha_research/tradingview/live/refresh_live_signal_pipeline.py
+```
+
+The lower-level compatibility tool below only strips post-signal fields from an
+existing research snapshot. It does not regenerate signals from newly synced
+daily bars:
 
 ```bash
 rtk python3 scripts/alpha_research/tradingview/live/build_live_signal_snapshot.py
@@ -27,6 +60,21 @@ Run:
 
 ```bash
 rtk python3 scripts/alpha_research/tradingview/live/run_l1_daily_candidates.py
+```
+
+For production daily output, prefer passing the intended T-close date
+explicitly so the script does not fall back to the most recent historical day
+that passed the v1 day filter:
+
+```bash
+rtk python3 scripts/alpha_research/tradingview/live/run_l1_daily_candidates.py --signal-date 2026-06-09
+```
+
+The refresh entrypoint can also invoke candidate generation after publishing the
+snapshot:
+
+```bash
+rtk python3 scripts/alpha_research/tradingview/live/refresh_l1_live_today.py --target-date 2026-06-09 --run-candidates --candidate-include-below-threshold
 ```
 
 The script reads `configs/l1_execution_v1.json` and defaults to the live-safe

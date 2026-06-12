@@ -25,6 +25,11 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
+from scripts.alpha_research.tradingview.signal_core.buy_points import (
+    BUY_POINT_TYPE_L1,
+    add_buy_point_columns,
+)
+
 
 DEFAULT_SNAPSHOT_PATH = (
     "examples/alpha_research/tradingview/reports/a5_signal_snapshot/"
@@ -32,7 +37,7 @@ DEFAULT_SNAPSHOT_PATH = (
 )
 DEFAULT_OUTPUT_DIR = "scripts/alpha_research/tradingview/reports/rank_score_study"
 DEFAULT_PANEL_PATH = "lab/a_share_research/panel/research_panel_daily"
-BUY_POINT_TYPE = "L1_reversal_start"
+BUY_POINT_TYPE = BUY_POINT_TYPE_L1
 DAY_FILTER_COLUMN = "rank_score_core4_short70_30"
 DAY_FILTER_THRESHOLD = 0.52
 SIGNAL_CLOSE_TOP_N = 20
@@ -720,7 +725,7 @@ def load_rank_pool(
     extra_factor_scan: bool = False,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Load and prepare the fixed L1 pool plus day filter."""
-    snapshot = pd.read_parquet(snapshot_path)
+    snapshot = add_buy_point_columns(pd.read_parquet(snapshot_path))
     snapshot["signal_date"] = normalize_date(snapshot["signal_date"])
     assert_signal_close_columns(
         [

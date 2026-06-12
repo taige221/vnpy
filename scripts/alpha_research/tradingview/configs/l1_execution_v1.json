@@ -6,10 +6,20 @@
   "source_snapshot": "scripts/alpha_research/tradingview/data/live_signal_snapshot.parquet",
   "live_signal_snapshot": "scripts/alpha_research/tradingview/data/live_signal_snapshot.parquet",
   "research_snapshot": "examples/alpha_research/tradingview/reports/a5_signal_snapshot/a5_signal_snapshot.parquet",
+  "live_refresh": {
+    "work_dir": "scripts/alpha_research/tradingview/data/live_refresh_work",
+    "source": "lab/a_share_research daily bars and research_panel_daily",
+    "entrypoint": "scripts/alpha_research/tradingview/live/refresh_l1_live_today.py",
+    "full_rebuild_entrypoint": "scripts/alpha_research/tradingview/live/refresh_live_signal_pipeline.py",
+    "lookback_bars": 500,
+    "factor_warmup_days": 520,
+    "min_history_bars": 400,
+    "notes": "Daily live refresh should use the L1 target-date live-only entrypoint. The full rebuild entrypoint is retained for historical parity checks and compatibility only."
+  },
   "signal": {
     "buy_point_type": "L1_reversal_start",
     "signal_role": "buy_point_trigger",
-    "notes": "L2 and L3 are excluded from v1 and must be evaluated separately."
+    "notes": "L2 and L3 are excluded from v1 and must be evaluated separately. buy_point_type is the stable buy-point family; buy_point_subtype carries same-family decomposition such as L1 start_type or L3 filter."
   },
   "candidate_day_filter": {
     "field": "core4_mean",

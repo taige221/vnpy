@@ -26,6 +26,8 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
+from scripts.alpha_research.tradingview.signal_core.buy_points import add_buy_point_columns
+
 
 DEFAULT_CONFIG_PATH = "scripts/alpha_research/tradingview/configs/l1_execution_v1.json"
 DEFAULT_OUTPUT_DIR = (
@@ -150,7 +152,7 @@ def load_snapshot(path: str) -> pd.DataFrame:
     """Load and normalize the signal snapshot."""
     snapshot = pd.read_parquet(path)
     snapshot["signal_date"] = normalize_date(snapshot["signal_date"])
-    return snapshot
+    return add_buy_point_columns(snapshot)
 
 
 def resolve_snapshot_path(args: argparse.Namespace, config: dict[str, Any]) -> str:
@@ -278,6 +280,10 @@ def add_industry(day: pd.DataFrame, panel_path: str) -> pd.DataFrame:
     if day.empty:
         day["sw_l1_name"] = pd.NA
         return day
+    if "sw_l1_name" in day.columns and day["sw_l1_name"].notna().any():
+        out = day.copy()
+        out["sw_l1_name"] = out["sw_l1_name"].fillna("UNKNOWN")
+        return out
     years = sorted(pd.to_datetime(day["signal_date"]).dt.year.astype(int).unique())
     industry = load_industry_mapping(panel_path, years)
     if industry.empty:
@@ -563,6 +569,8 @@ def add_reason_columns(frame: pd.DataFrame) -> pd.DataFrame:
                 f"score={row.get('rank_score_core4_short70_30', math.nan):.4f}"
                 if pd.notna(row.get("rank_score_core4_short70_30"))
                 else "",
+                str(row.get("buy_point_label", "")),
+                str(row.get("buy_point_subtype", "")),
                 str(row.get("start_type", "")),
                 f"grade={row.get('start_grade', '')}",
                 str(row.get("vol_quality_bucket", "")),
@@ -610,6 +618,9 @@ def output_columns(frame: pd.DataFrame) -> list[str]:
         "vt_symbol",
         "name",
         "sw_l1_name",
+        "buy_point_type",
+        "buy_point_label",
+        "buy_point_subtype",
         "rank_score_core4_short70_30",
         "start_score",
         "start_grade",
@@ -713,6 +724,8 @@ def write_markdown(
         lines.append("| Rank | Symbol | Name | Industry | Score | Start | Exec Bucket | Tags |")
         lines.append("| ---: | --- | --- | --- | ---: | --- | --- | --- |")
         for row in watch.head(top_n).to_dict("records"):
+            buy_point_text = row.get("buy_point_label", "") or row.get("buy_point_type", "")
+            subtype_text = row.get("buy_point_subtype", "") or row.get("start_type", "")
             lines.append(
                 "| "
                 f"{int(row.get('signal_close_rank', row.get('overnight_rank', 0)))} | "
@@ -720,7 +733,7 @@ def write_markdown(
                 f"{row.get('name', '')} | "
                 f"{row.get('sw_l1_name', '')} | "
                 f"{float(row.get('rank_score_core4_short70_30', math.nan)):.4f} | "
-                f"{row.get('start_type', '')}/{row.get('start_grade', '')} | "
+                f"{buy_point_text}/{subtype_text}/{row.get('start_grade', '')} | "
                 f"{row.get('execution_bucket', '')} | "
                 f"{row.get('risk_tags', '')} |"
             )

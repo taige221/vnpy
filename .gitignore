@@ -46,3 +46,8 @@ docs/superpowers
 examples/alpha_research/tradingview
 scripts/alpha_research/tradingview/reports
 scripts/alpha_research/tradingview/data
+scripts/alpha_build/data/*
+!scripts/alpha_build/data/.gitkeep
+
+scripts/alpha_research/demo
+docs/sessions
